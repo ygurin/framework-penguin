@@ -12,8 +12,6 @@ This version includes LUKS disk encryption password entry UI based on the origin
 
 Animation sourced from Framework's ASCII penguin motion graphic.
 
-Theme structure and password entry UI based on [framework-1](https://github.com/ygurin/framework-1), which in turn is based on [James Kupke](https://git.sr.ht/~jameskupke/framework-plymouth-theme)'s Framework Plymouth theme.
-
 ## Installation
 
 ### Prerequisites
