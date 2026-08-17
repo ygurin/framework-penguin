@@ -18,6 +18,11 @@ lock = null;
 entry = null;
 logo = null;
 
+// Sprite layers. The throbber frames are opaque (no alpha), so every piece of UI
+// chrome must sit on a higher layer or the animation paints straight over it.
+Z_ANIMATION = 0;
+Z_UI = 10;
+
 // Load images for password box
 lock.image = Image("lock.png");
 entry.image = Image("entry.png");
@@ -26,6 +31,24 @@ bullet.image = Image("bullet.png");
 // Load watermark logo
 logo.image = Image("watermark.png");
 logo.sprite = Sprite(logo.image);
+logo.sprite.SetZ(Z_UI);
+logo.h = logo.image.GetHeight();
+
+// Cache password box geometry as plain numbers, so the caps lock indicator can be
+// positioned without depending on lock/entry (which DisplayNormalCallback clears).
+box.w = lock.image.GetWidth() + entry.image.GetWidth();
+box.h = entry.image.GetHeight();
+
+// Caps Lock indicator, sitting to the left of the password box. Plymouth exposes caps
+// lock only as a poll (Plymouth.GetCapslockState) with no change callback, so it is
+// read once per refresh in refresh_callback below rather than driven by an event.
+capslock.image = Image("capslock.png");
+capslock.sprite = Sprite(capslock.image);
+capslock.sprite.SetOpacity(0);
+capslock.sprite.SetZ(Z_UI);
+capslock.w = capslock.image.GetWidth();
+capslock.h = capslock.image.GetHeight();
+capslock.gap = 10; // spacing between the indicator and the lock icon
 
 // State management
 state.status = "play";
@@ -51,6 +74,7 @@ throbber_sprite = Sprite();
 
 // Set opacity
 throbber_sprite.SetOpacity(1);
+throbber_sprite.SetZ(Z_ANIMATION);
 
 progress = 0;
 
@@ -72,6 +96,21 @@ fun refresh_callback() {
     if (throbber_image[0]) {
         throbber_sprite.SetX(screen.half.w - throbber_image[0].GetWidth() / 2);
         throbber_sprite.SetY(screen.half.h - throbber_image[0].GetHeight() / 2);
+    }
+
+    // Caps Lock indicator - polled every refresh (~50Hz), so it tracks the key
+    // immediately whether or not a password prompt is on screen.
+    if (Plymouth.GetCapslockState()) {
+        // Mirror the password box placement, then sit just left of its lock icon,
+        // vertically centred on the box.
+        logo_top = screen.h - logo.h - 20;
+        password_y = (screen.half.h + logo_top) / 2;
+        box_left = screen.half.w - box.w / 2;
+        capslock.sprite.SetX(box_left - capslock.gap - capslock.w);
+        capslock.sprite.SetY(password_y - capslock.h / 2);
+        capslock.sprite.SetOpacity(1);
+    } else {
+        capslock.sprite.SetOpacity(0);
     }
 
     if (state.status == "play") {
@@ -138,11 +177,13 @@ fun DisplayPasswordCallback(nil, bulletCount) {
     lock.sprite = Sprite(lock.image);
     lock.sprite.SetX(box_x);
     lock.sprite.SetY(box_y);
+    lock.sprite.SetZ(Z_UI);
 
     // Display entry box on the right of lock
     entry.sprite = Sprite(entry.image);
     entry.sprite.SetX(box_x + lock.image.GetWidth());
     entry.sprite.SetY(box_y);
+    entry.sprite.SetZ(Z_UI);
 
     // Clear existing bullets (handles backspace)
     bullets = null;
@@ -167,6 +208,7 @@ fun DisplayPasswordCallback(nil, bulletCount) {
         bullets[i].sprite = Sprite(bullet.image);
         bullets[i].sprite.SetX(bullet_start_x + i * bullet.image.GetWidth());
         bullets[i].sprite.SetY(bullet_y);
+        bullets[i].sprite.SetZ(Z_UI);
     }
 }
 
