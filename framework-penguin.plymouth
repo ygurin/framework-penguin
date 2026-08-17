@@ -1,0 +1,17 @@
+[Plymouth Theme]
+Name=Framework-Penguin
+Description=Custom Framework theme with ASCII penguin animation and enhanced password display
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/framework-penguin
+ScriptFile=/usr/share/plymouth/themes/framework-penguin/framework-penguin.script
+
+[boot-up]
+UseEndAnimation=true
+
+[shutdown]
+UseEndAnimation=false
+
+[reboot]
+UseEndAnimation=false

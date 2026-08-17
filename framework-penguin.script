@@ -1,0 +1,202 @@
+// Custom Framework-Penguin Plymouth Theme
+// Based on Framework theme with enhanced password display
+// Multi-monitor fix applied
+
+// Screen dimensions - use actual window size, not GetWidth(0)
+screen.w = Window.GetWidth();
+screen.h = Window.GetHeight();
+screen.half.w = screen.w / 2;
+screen.half.h = screen.h / 2;
+
+// Initialize variables
+question = null;
+answer = null;
+message = null;
+bullets = null;
+prompt = null;
+lock = null;
+entry = null;
+logo = null;
+
+// Load images for password box
+lock.image = Image("lock.png");
+entry.image = Image("entry.png");
+bullet.image = Image("bullet.png");
+
+// Load watermark logo
+logo.image = Image("watermark.png");
+logo.sprite = Sprite(logo.image);
+
+// State management
+state.status = "play";
+state.time = 0.0;
+
+//--------------------------------- Logo Animation (Throbber) --------------------------
+// Source animation is 101 frames at 24fps. Plymouth refreshes at ~50Hz, so advance
+// half a frame per refresh to play back at roughly the animation's native speed.
+throbber_frames = 101;
+throbber_speed = 0.5;
+
+// Load all throbber images
+for (i = 0; i < throbber_frames; i++) {
+    if (i < 10)
+        throbber_image[i] = Image("throbber-000" + i + ".png");
+    else if (i < 100)
+        throbber_image[i] = Image("throbber-00" + i + ".png");
+    else
+        throbber_image[i] = Image("throbber-0" + i + ".png");
+}
+
+throbber_sprite = Sprite();
+
+// Set opacity
+throbber_sprite.SetOpacity(1);
+
+progress = 0;
+
+// Animation refresh function
+fun refresh_callback() {
+    // Recalculate screen dimensions each frame for multi-monitor
+    screen.w = Window.GetWidth();
+    screen.h = Window.GetHeight();
+    screen.half.w = screen.w / 2;
+    screen.half.h = screen.h / 2;
+
+    // Position logo at bottom center
+    if (logo.image) {
+        logo.sprite.SetX(screen.half.w - logo.image.GetWidth() / 2);
+        logo.sprite.SetY(screen.h - logo.image.GetHeight() - 20);
+    }
+
+    // Center the throbber
+    if (throbber_image[0]) {
+        throbber_sprite.SetX(screen.half.w - throbber_image[0].GetWidth() / 2);
+        throbber_sprite.SetY(screen.half.h - throbber_image[0].GetHeight() / 2);
+    }
+
+    if (state.status == "play") {
+        current_image = throbber_image[Math.Int(progress) % throbber_frames];
+        if (current_image) {
+            throbber_sprite.SetImage(current_image);
+        }
+        progress += throbber_speed;
+    }
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);
+
+//------------------------------------- Question Prompt -------------------------------
+fun DisplayQuestionCallback(prompt_text, entry_text) {
+    // Recalculate screen dimensions
+    screen.w = Window.GetWidth();
+    screen.h = Window.GetHeight();
+    screen.half.w = screen.w / 2;
+    screen.half.h = screen.h / 2;
+
+    question = null;
+    answer = null;
+
+    if (entry_text == "")
+        entry_text = "<answer>";
+
+    question.image = Image.Text(prompt_text, 1, 1, 1);
+    question.sprite = Sprite(question.image);
+    question.sprite.SetX(screen.half.w - question.image.GetWidth() / 2);
+    question.sprite.SetY(screen.h - 4 * question.image.GetHeight());
+
+    answer.image = Image.Text(entry_text, 1, 1, 1);
+    answer.sprite = Sprite(answer.image);
+    answer.sprite.SetX(screen.half.w - answer.image.GetWidth() / 2);
+    answer.sprite.SetY(screen.h - 2 * answer.image.GetHeight());
+}
+
+Plymouth.SetDisplayQuestionFunction(DisplayQuestionCallback);
+
+//------------------------------------- Password Prompt -------------------------------
+fun DisplayPasswordCallback(nil, bulletCount) {
+    // Recalculate screen dimensions
+    screen.w = Window.GetWidth();
+    screen.h = Window.GetHeight();
+    screen.half.w = screen.w / 2;
+    screen.half.h = screen.h / 2;
+
+    state.status = "pause";
+
+    // Calculate vertical position: halfway between throbber center and logo top
+    logo_top = screen.h - logo.image.GetHeight() - 20;
+    password_y = (screen.half.h + logo_top) / 2;
+
+    // Calculate total width of password box (lock + entry)
+    box_width = lock.image.GetWidth() + entry.image.GetWidth();
+    box_height = entry.image.GetHeight();
+
+    // Position box horizontally centered, vertically between throbber and logo
+    box_x = screen.half.w - box_width / 2;
+    box_y = password_y - box_height / 2;
+
+    // Display lock icon on the left
+    lock.sprite = Sprite(lock.image);
+    lock.sprite.SetX(box_x);
+    lock.sprite.SetY(box_y);
+
+    // Display entry box on the right of lock
+    entry.sprite = Sprite(entry.image);
+    entry.sprite.SetX(box_x + lock.image.GetWidth());
+    entry.sprite.SetY(box_y);
+
+    // Clear existing bullets (handles backspace)
+    bullets = null;
+
+    // Calculate max bullets that can fit in the entry box
+    entry_width = entry.image.GetWidth() - 20; // 10px padding on each side
+    max_bullets = Math.Int(entry_width / bullet.image.GetWidth());
+
+    // Limit bulletCount to what fits in the box
+    visible_bullets = bulletCount;
+    if (visible_bullets > max_bullets)
+        visible_bullets = max_bullets;
+
+    // Position bullets inside the entry box
+    // Start position: left edge of entry box + small padding
+    bullet_start_x = box_x + lock.image.GetWidth() + 10;
+    // Vertical center of the box
+    bullet_y = box_y + (box_height / 2) - (bullet.image.GetHeight() / 2);
+
+    // Create bullet sprites for each character (only show what fits)
+    for (i = 0; i < visible_bullets; i++) {
+        bullets[i].sprite = Sprite(bullet.image);
+        bullets[i].sprite.SetX(bullet_start_x + i * bullet.image.GetWidth());
+        bullets[i].sprite.SetY(bullet_y);
+    }
+}
+
+Plymouth.SetDisplayPasswordFunction(DisplayPasswordCallback);
+
+//--------------------------- Normal Display (Clear Text) --------------------------
+fun DisplayNormalCallback() {
+    state.status = "play";
+    bullets = null;
+    prompt = null;
+    lock = null;
+    entry = null;
+    message = null;
+    question = null;
+    answer = null;
+}
+
+Plymouth.SetDisplayNormalFunction(DisplayNormalCallback);
+
+//----------------------------------------- Message Display --------------------------------
+fun MessageCallback(text) {
+    // Recalculate screen dimensions
+    screen.w = Window.GetWidth();
+    screen.h = Window.GetHeight();
+    screen.half.w = screen.w / 2;
+    screen.half.h = screen.h / 2;
+
+    message.image = Image.Text(text, 1, 1, 1);
+    message.sprite = Sprite(message.image);
+    message.sprite.SetPosition(screen.half.w - message.image.GetWidth() / 2, message.image.GetHeight());
+}
+
+Plymouth.SetMessageFunction(MessageCallback);
