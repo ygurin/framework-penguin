@@ -140,11 +140,13 @@ fun DisplayQuestionCallback(prompt_text, entry_text) {
 
     question.image = Image.Text(prompt_text, 1, 1, 1);
     question.sprite = Sprite(question.image);
+    question.sprite.SetZ(Z_UI);
     question.sprite.SetX(screen.half.w - question.image.GetWidth() / 2);
     question.sprite.SetY(screen.h - 4 * question.image.GetHeight());
 
     answer.image = Image.Text(entry_text, 1, 1, 1);
     answer.sprite = Sprite(answer.image);
+    answer.sprite.SetZ(Z_UI);
     answer.sprite.SetX(screen.half.w - answer.image.GetWidth() / 2);
     answer.sprite.SetY(screen.h - 2 * answer.image.GetHeight());
 }
@@ -219,8 +221,11 @@ fun DisplayNormalCallback() {
     state.status = "play";
     bullets = null;
     prompt = null;
-    lock = null;
-    entry = null;
+    // Drop only the sprites here. lock.image and entry.image are loaded once at script
+    // load, so nulling the whole `lock`/`entry` hashes would destroy them and every
+    // later prompt - a retry after a wrong passphrase - would have no box to draw.
+    lock.sprite = null;
+    entry.sprite = null;
     message = null;
     question = null;
     answer = null;
@@ -238,6 +243,7 @@ fun MessageCallback(text) {
 
     message.image = Image.Text(text, 1, 1, 1);
     message.sprite = Sprite(message.image);
+    message.sprite.SetZ(Z_UI);
     message.sprite.SetPosition(screen.half.w - message.image.GetWidth() / 2, message.image.GetHeight());
 }
 
