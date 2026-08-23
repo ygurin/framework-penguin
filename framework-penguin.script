@@ -13,7 +13,6 @@ question = null;
 answer = null;
 message = null;
 bullets = null;
-prompt = null;
 lock = null;
 entry = null;
 logo = null;
@@ -32,27 +31,8 @@ bullet.image = Image("bullet.png");
 logo.image = Image("watermark.png");
 logo.sprite = Sprite(logo.image);
 logo.sprite.SetZ(Z_UI);
-logo.h = logo.image.GetHeight();
 
-// Cache password box geometry as plain numbers, so the caps lock indicator can be
-// positioned without depending on lock/entry (which DisplayNormalCallback clears).
-box.w = lock.image.GetWidth() + entry.image.GetWidth();
-box.h = entry.image.GetHeight();
-
-// Caps Lock indicator, sitting to the left of the password box. Plymouth exposes caps
-// lock only as a poll (Plymouth.GetCapslockState) with no change callback, so it is
-// read once per refresh in refresh_callback below rather than driven by an event.
-capslock.image = Image("capslock.png");
-capslock.sprite = Sprite(capslock.image);
-capslock.sprite.SetOpacity(0);
-capslock.sprite.SetZ(Z_UI);
-capslock.w = capslock.image.GetWidth();
-capslock.h = capslock.image.GetHeight();
-capslock.gap = 10; // spacing between the indicator and the lock icon
-
-// State management
 state.status = "play";
-state.time = 0.0;
 
 //--------------------------------- Logo Animation (Throbber) --------------------------
 // Source animation is 101 frames at 24fps. Plymouth refreshes at ~50Hz, so advance
@@ -96,21 +76,6 @@ fun refresh_callback() {
     if (throbber_image[0]) {
         throbber_sprite.SetX(screen.half.w - throbber_image[0].GetWidth() / 2);
         throbber_sprite.SetY(screen.half.h - throbber_image[0].GetHeight() / 2);
-    }
-
-    // Caps Lock indicator - polled every refresh (~50Hz), so it tracks the key
-    // immediately whether or not a password prompt is on screen.
-    if (Plymouth.GetCapslockState()) {
-        // Mirror the password box placement, then sit just left of its lock icon,
-        // vertically centred on the box.
-        logo_top = screen.h - logo.h - 20;
-        password_y = (screen.half.h + logo_top) / 2;
-        box_left = screen.half.w - box.w / 2;
-        capslock.sprite.SetX(box_left - capslock.gap - capslock.w);
-        capslock.sprite.SetY(password_y - capslock.h / 2);
-        capslock.sprite.SetOpacity(1);
-    } else {
-        capslock.sprite.SetOpacity(0);
     }
 
     if (state.status == "play") {
@@ -220,10 +185,8 @@ Plymouth.SetDisplayPasswordFunction(DisplayPasswordCallback);
 fun DisplayNormalCallback() {
     state.status = "play";
     bullets = null;
-    prompt = null;
-    // Drop only the sprites here. lock.image and entry.image are loaded once at script
-    // load, so nulling the whole `lock`/`entry` hashes would destroy them and every
-    // later prompt - a retry after a wrong passphrase - would have no box to draw.
+    // Drop only the sprites; lock.image/entry.image load once, and nulling the whole
+    // hash leaves no box to draw on a retry after a wrong passphrase.
     lock.sprite = null;
     entry.sprite = null;
     message = null;
