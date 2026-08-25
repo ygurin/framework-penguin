@@ -16,12 +16,14 @@ Animation sourced from Framework's ASCII penguin motion graphic.
 
 ### Prerequisites
 
-Ensure Plymouth is installed on your system:
+This theme uses Plymouth's **script** module, so you need the script plugin as well as Plymouth itself.
 
 **Fedora/RHEL:**
 ```bash
-sudo dnf install plymouth plymouth-scripts
+sudo dnf install plymouth plymouth-scripts plymouth-plugin-script
 ```
+
+> Fedora ships the script plugin in its own package.
 
 **Debian/Ubuntu:**
 ```bash
