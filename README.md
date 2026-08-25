@@ -54,3 +54,13 @@ The default logo is fedora, but you can insert any logo by replacing the `waterm
 Plymouth's refresh callback fires at roughly 50Hz, so `framework-penguin.script` advances
 the animation by `throbber_speed = 0.5` frames per refresh to play back at close to the
 source's native 24fps. Raise or lower `throbber_speed` to speed up or slow down the loop.
+
+## License
+
+The theme code — `framework-penguin.script` and `framework-penguin.plymouth` — is
+[MIT](LICENSE) licensed.
+
+The bundled images are **not**. The penguin animation frames are Framework's artwork,
+the password-entry icons come from Plymouth's `spinner` theme under GPL-2.0-or-later,
+and `watermark.png` is a Fedora trademark. See [LICENSES.md](LICENSES.md) for the
+per-file breakdown.
