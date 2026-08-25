@@ -43,11 +43,11 @@ throbber_speed = 0.5;
 // Load all throbber images
 for (i = 0; i < throbber_frames; i++) {
     if (i < 10)
-        throbber_image[i] = Image("throbber-000" + i + ".png");
+        throbber_image[i] = Image("frames/throbber-000" + i + ".png");
     else if (i < 100)
-        throbber_image[i] = Image("throbber-00" + i + ".png");
+        throbber_image[i] = Image("frames/throbber-00" + i + ".png");
     else
-        throbber_image[i] = Image("throbber-0" + i + ".png");
+        throbber_image[i] = Image("frames/throbber-0" + i + ".png");
 }
 
 throbber_sprite = Sprite();
